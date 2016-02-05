@@ -1,0 +1,39 @@
+postgres:
+  image: postgres:9.4.5
+  container_name: postgres
+  environment:
+    POSTGRES_USER: drkiq
+    POSTGRES_PASSWORD: secret
+  ports:
+    - '5432'
+
+redis:
+  image: redis:3.0.5
+  container_name: redis
+  ports:
+    - '6379'
+  volumes:
+    - drkiq-redis:/var/lib/redis/data
+
+web:
+  build: .
+  links:
+    - postgres
+    - redis
+  volumes:
+    - .:/drkiq
+  ports:
+    - '8000'
+  env_file:
+    - .drkiq.env
+
+sidekiq:
+  build: .
+  command: bundle exec sidekiq -C config/sidekiq.yml
+  links:
+    - postgres
+    - redis
+  volumes:
+    - .:/drkiq
+  env_file:
+    - .drkiq.env
